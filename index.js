@@ -4,11 +4,9 @@ const cors = require("cors");
 const admin = require("firebase-admin");
 require("dotenv").config();
 const { MongoClient } = require("mongodb");
-
 const port = process.env.PORT || 5000;
 // note: (from 'doctors-portal.json' file we copy only private key after convert file content into stringfy )
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-//console.log("tumi amr jan pakhi eybar run koro moina", serviceAccount);
 //admin initilize middleware
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -16,18 +14,39 @@ admin.initializeApp({
 //middleware
 app.use(cors());
 app.use(express.json());
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.swu9d.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-// doctorDb k2KZsj1SNOftk6KG
+//connection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.trtrt.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+// sendgrid email sent
+const sgMail = require("@sendgrid/mail");
+async function sentEmailNotification(email, n) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  const msg = {
+    to: [`${email}`, "mahmudul15-8624@diu.edu.bd"], // Change to your recipient
+    from: "mahmudul15-8624@diu.edu.bd", // Change to your verified sender
+    subject: "About Appointment Status",
+    text: "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minus corrupti numquam quae fugit quibusdam quis dolores laboriosam atque, aliquam, repellendus totam sunt eius porro iure modi optio excepturi beatae delectus.",
+    html: "<strong>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minus corrupti numquam quae fugit quibusdam quis dolores laboriosam atque, aliquam, repellendus totam sunt eius porro iure modi optio excepturi beatae delectus.</strong>",
+  };
+  await sgMail
+    .send(msg)
+    .then((response) => {
+      console.log(response[0].statusCode);
+      console.log(response[0].headers);
+      console.log(n);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+}
 
+//verify token middleware
 async function verifyToken(req, res, next) {
   if (req.headers?.authorization?.startsWith("Bearer ")) {
     const token = req?.headers?.authorization?.split("Bearer ")[1];
-
     try {
       const decodedUser = await admin.auth().verifyIdToken(token);
       req.decodedEmail = decodedUser.email;
@@ -39,7 +58,6 @@ async function verifyToken(req, res, next) {
 async function run() {
   try {
     await client.connect();
-
     const database = client.db("doctors_portal");
     const appointmentsCollection = database.collection("appointments");
     const usersCollection = database.collection("users");
@@ -58,7 +76,10 @@ async function run() {
     });
 
     app.post("/appointments", async (req, res) => {
+      const n = "email success notification ";
+      await sentEmailNotification(req?.body?.email, n);
       const appointment = req.body;
+      //console.log("appointment", appointment);
       const result = await appointmentsCollection.insertOne(appointment);
       res.json(result);
     });
