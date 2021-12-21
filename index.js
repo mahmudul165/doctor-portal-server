@@ -6,20 +6,16 @@ require("dotenv").config();
 const { MongoClient } = require("mongodb");
 
 const port = process.env.PORT || 5000;
-
+// note: (from 'doctors-portal.json' file we copy only private key after convert file content into stringfy )
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-console.log("tumi amr jan pakhi eybar run koro moina", serviceAccount);
-
-//const serviceAccount = require("./doctors-portal.json");
-//console.log("kaj kore kina", serviceAccount);
-
+//console.log("tumi amr jan pakhi eybar run koro moina", serviceAccount);
+//admin initilize middleware
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
-
+//middleware
 app.use(cors());
 app.use(express.json());
-
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.swu9d.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.trtrt.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
@@ -46,16 +42,14 @@ async function run() {
     const database = client.db("doctors_portal");
     const appointmentsCollection = database.collection("appointments");
     const usersCollection = database.collection("users");
-
-    app.get("/appointments", verifyToken, async (req, res) => {
+    app.get("/appointments", async (req, res) => {
       const email = req.query.email;
-      const date = req.query.date;
+      const date = new Date(req.query.date).toLocaleDateString();
       //console.log(email, date);
       const query = { email: email, date: date };
-      // console.log("i miss u jan", query);
-
+      console.log("i miss u jan", query);
       const cursor = appointmentsCollection.find(query);
-      console.log("i miss u jan", cursor);
+      //console.log("i miss u jan", cursor);
       const appointments = await cursor.toArray();
       //console.log("i miss u jan", appointments);
 
