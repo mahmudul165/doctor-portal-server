@@ -67,12 +67,23 @@ async function run() {
       const date = req.query.date;
       //console.log(email, date);
       const query = { email: email, date: date };
-      console.log("i miss u jan", query);
+      // console.log("i miss u jan", query);
       const cursor = appointmentsCollection.find(query);
       //console.log("i miss u jan", cursor);
       const appointments = await cursor.toArray();
       //console.log("i miss u jan", appointments);
 
+      res.json(appointments);
+    });
+    //ner api
+    app.get("/appointments/:id", async (req, res) => {
+      const serviceId = req.params.id;
+      const query = { id: serviceId };
+      // console.log("i miss u jan", query);
+      const cursor = appointmentsCollection.find(query);
+      console.log("i miss u jan", cursor);
+      const appointments = await cursor.toArray();
+      //console.log("i miss u jan", appointments);
       res.json(appointments);
     });
 
